@@ -7,7 +7,6 @@ var lastId = 0;
 var geoFormat = new ol.format.GeoJSON;
 
 
-
 const rasterSource = new ol.source.OSM();
 const rasterLayer = new ol.layer.Tile({
     source: rasterSource
