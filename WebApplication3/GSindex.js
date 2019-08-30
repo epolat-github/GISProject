@@ -13,6 +13,13 @@ const rasterLayer = new ol.layer.Tile({
     source: rasterSource
 })
 
+const wmsLayerSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/wms?bbox=-7619732.29588025,-3304036.170978,7940646.35146273,4617040.74861659&styles=line&Format=image/png&request=GetMap&layers=nyc:FEATURES&width=800&height=900&srs=EPSG:3857'
+});
+const wmsLayer = new ol.layer.Image({
+    source: wmsLayerSource
+});
+
 const vectorSource = new ol.source.Vector({
     format: geoFormat,
     url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&' +
@@ -37,7 +44,7 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterLayer, vectorLayer],
+    layers: [rasterLayer,wmsLayer, vectorLayer],
     target: 'map',
     view: new ol.View({
         center: [0, 0],
