@@ -7,27 +7,28 @@ var lastId = 0;
 var geoFormat = new ol.format.GeoJSON;
 
 
-
+//Raster layer
 const rasterSource = new ol.source.OSM();
 const rasterLayer = new ol.layer.Tile({
     source: rasterSource
 })
 
+//Feature layer as image
 const wmsLayerSource = new ol.source.ImageWMS({
-    url: 'http://localhost:8090/geoserver/wms?bbox=-7619732.29588025,-3304036.170978,7940646.35146273,4617040.74861659&styles=line&Format=image/png&request=GetMap&layers=nyc:FEATURES&width=800&height=900&srs=EPSG:3857'
+    url: 'http://localhost:8090/geoserver/wms?styles=line&Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
 });
 const wmsLayer = new ol.layer.Image({
     source: wmsLayerSource
 });
 
+//Features as vector layer
 const vectorSource = new ol.source.Vector({
     format: geoFormat,
     url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&' +
         'request=GetFeature&typeName=nyc%3AFEATURES&outputFormat=application%2Fjson',
 });
 const vectorLayer = new ol.layer.Vector({
-    source: vectorSource,
-
+    source: vectorSource
 });
 
 //selection
@@ -44,7 +45,7 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterLayer,wmsLayer, vectorLayer],
+    layers: [rasterLayer,vectorLayer, wmsLayer],
     target: 'map',
     view: new ol.View({
         center: [0, 0],
@@ -167,49 +168,54 @@ function Modify() {
     $("#modify").toggleClass("buttonEnabled");
 }
 
+//SNAP FEATURE 
 //add Snap feature
-//snapButton.disabled = true; //snap feature DISABLED
-
-var snap = new ol.interaction.Snap({
-    source: vectorSource
-});
-var snapSituation = false; //false, not snapping; true, snapping
-function Snap() {
-    if (snapSituation) {
-        map.removeInteraction(snap); // disables snap
-        snapSituation = false;
-        snapButton.style.backgroundColor = "#ea9595";
-        snapButton.style.borderColor = "#c71d1d";
-    }
-    else {
-        map.addInteraction(snap);
-        snapSituation = true;
-        snapButton.style.backgroundColor = "#5ebe82";
-        snapButton.style.borderColor = "#00ff21";
-    }
-}
+//snapButton.disabled = true;
+//var snap = new ol.interaction.Snap({
+//    source: vectorSource
+//});
+//var snapSituation = false; //false, not snapping; true, snapping
+//function Snap() {
+//    if (snapSituation) {
+//        map.removeInteraction(snap); // disables snap
+//        snapSituation = false;
+//        snapButton.style.backgroundColor = "#ea9595";
+//        snapButton.style.borderColor = "#c71d1d";
+//    }
+//    else {
+//        map.addInteraction(snap);
+//        snapSituation = true;
+//        snapButton.style.backgroundColor = "#5ebe82";
+//        snapButton.style.borderColor = "#00ff21";
+//    }
+//}
 
 //Updates map
 $(function () {
     $("#update").click(function () {
         if (select !== null) {
-            var allFeatures = select.getFeatures();
-            geoJsonObject = geoFormat.writeFeature(allFeatures.item(0));
-        }
+            var allFeatures = vectorSource.getFeatures();
+            var i;
+            for (i = 0; i < allFeatures.length; i++) {
+                let feature = allFeatures[i];
 
-        $.ajax({
-            url: "WebService1.asmx/updateDatabase",
-            contentType: "application/json; charset=utf-8",
-            data: JSON.stringify({ feature: geoJsonObject }),
-            method: "post",
-            dataType: "json",
-            success: function () { //data.d
-                alert("Successfully updated!");
-            },
-            error: function (req, textStatus, errorThrown) {
-                alert('ERROR: ' + textStatus + ' ' + errorThrown);
+                geoJsonObject = geoFormat.writeFeature(feature);
+
+                $.ajax({
+                    url: "WebService1.asmx/updateDatabase",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ feature: geoJsonObject }),
+                    method: "post",
+                    dataType: "json",
+                    success: function () { //data.d
+                        alert("Successfully updated!");
+                    },
+                    error: function (req, textStatus, errorThrown) {
+                        alert('ERROR: ' + textStatus + ' ' + errorThrown);
+                    }
+                });
             }
-        });
+        }        
     });
 });
 

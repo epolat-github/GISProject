@@ -39,8 +39,12 @@ namespace WebApplication3
 
             conn.Open();
 
-            string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
-                $"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
+            //string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
+            //$"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
+
+            string updateQuery = $"INSERT INTO public.\"FEATURES\" (gid, type, geom) VALUES" +
+                $"DEFAULT, '{featured.type}', " +
+                $"ST_GeomFromGeoJSON('{featured.geometry}')";
 
             NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
             int row = command.ExecuteNonQuery();
