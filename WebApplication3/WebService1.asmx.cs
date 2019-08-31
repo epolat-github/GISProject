@@ -34,13 +34,13 @@ namespace WebApplication3
         public void updateDatabase(string feature)
         {
             NpgsqlConnection conn = connectDB();
-            Feature featured = JsonConvert.DeserializeObject<Feature>(feature);
+            Rootobject featured = JsonConvert.DeserializeObject<Rootobject>(feature);
 
-
+            
             conn.Open();
 
             string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
-                $"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
+                $"ST_GeomFromGeoJSON('{featured.features.}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
 
             NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
             int row = command.ExecuteNonQuery();
