@@ -69,15 +69,14 @@ namespace WebApplication3
         {
             NpgsqlConnection conn = connectDB();
 
-
             conn.Open();
+
             string deleteQuery = $"DELETE FROM public.\"FEATURES\" " +
                 $"WHERE gid = {id}";
 
             NpgsqlCommand command = new NpgsqlCommand(deleteQuery, conn);
-            int row = command.ExecuteNonQuery();
-            Console.WriteLine(row);
-
+            command.ExecuteNonQuery();
+            
         }
 
         [WebMethod]

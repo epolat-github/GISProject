@@ -15,7 +15,7 @@ const rasterLayer = new ol.layer.Tile({
 
 //Feature layer as image
 const wmsLayerSource = new ol.source.ImageWMS({
-    url: 'http://localhost:8090/geoserver/wms?styles=line&Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
+    url: 'http://localhost:8090/geoserver/wms?Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
 });
 const wmsLayer = new ol.layer.Image({
     source: wmsLayerSource
@@ -232,7 +232,7 @@ function updateFeature(geoJson) {
     });
 };
 
-//Adds feature
+//Add feature
 function addFeature(geoJson) {
     $.ajax({
         url: "WebService1.asmx/addFeature",
@@ -249,7 +249,6 @@ function addFeature(geoJson) {
         }
     });
 };
-
 
 $(function () {
     $("#add").click(function () {
@@ -277,13 +276,22 @@ $(function () {
     });
 });
 
-//Deletes feature
+//Deletes specific feature
 $(function () {
     $("#delete").click(function () {
-        if (select !== null) {
+        if (select.getFeatures().values_.length != 0) {
             var allFeatures = select.getFeatures();
             var featToDel = allFeatures.item(0);
-            var deleteId = featToDel.getId();
+            var deleteId = featToDel.getId(); //string id
+            if (deleteId == undefined) {        //deletion before sync (no id appointed yet)
+                vectorSource.removeFeature(featToDel);
+                return;
+            }
+            deleteId = parseInt(deleteId.substring(9)); //int id
+        }
+        else {
+            alert("No feature selected!");
+            return;
         }
 
         $.ajax({
@@ -293,11 +301,14 @@ $(function () {
             success: function () { //data.d
                 vectorSource.removeFeature(featToDel);
                 $("#select").trigger('click');
+                wmsLayerSource.refresh();
+                select.getFeatures().clear();
                 alert("Successfully deleted!");
             },
             error: function (req, textStatus, errorThrown) {
                 $("#select").trigger('click');
-                alert('ERROR: ' + textStatus + ' ' + errorThrown);
+                select.getFeatures().clear();
+                alert('Deletion Error: ' + textStatus + ' ' + errorThrown);
             }
         });
     });
