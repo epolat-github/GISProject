@@ -45,7 +45,7 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterLayer,vectorLayer, wmsLayer],
+    layers: [rasterLayer, vectorLayer, wmsLayer],
     target: 'map',
     view: new ol.View({
         center: [0, 0],
@@ -190,36 +190,67 @@ function Modify() {
 //    }
 //}
 
-//Updates map
+//Synchronize map
 $(function () {
     $("#update").click(function () {
-        if (select !== null) {
-            var allFeatures = vectorSource.getFeatures();
-            var i;
-            for (i = 0; i < allFeatures.length; i++) {
-                let feature = allFeatures[i];
 
+        var allFeatures = vectorSource.getFeatures();
+        var i;
+        for (i = 0; i < allFeatures.length; i++) {
+            let feature = allFeatures[i];            
+
+            if (feature.id_ === undefined) { //new features don't assigned id
                 geoJsonObject = geoFormat.writeFeature(feature);
-
-                $.ajax({
-                    url: "WebService1.asmx/updateDatabase",
-                    contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify({ feature: geoJsonObject }),
-                    method: "post",
-                    dataType: "json",
-                    success: function () { //data.d
-                        alert("Successfully updated!");
-                    },
-                    error: function (req, textStatus, errorThrown) {
-                        alert('ERROR: ' + textStatus + ' ' + errorThrown);
-                    }
-                });
+                addFeature(geoJsonObject);
             }
-        }        
+            else {
+                var tempID = feature.getId(); //ID as string(FEATURES.3)
+                var newID = parseInt(tempID.substring(9)); //ID as integer(3)
+                feature.setId(newID);
+                geoJsonObject = geoFormat.writeFeature(feature);
+                updateFeature(geoJsonObject);
+            }            
+        }
     });
 });
 
+//Update feature
+function updateFeature(geoJson) {
+    $.ajax({
+        url: "WebService1.asmx/updateFeature",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({ feature: geoJson }),
+        method: "post",
+        dataType: "json",
+        success: function () { //data.d
+            console.log("Successfully updated!");
+            wmsLayerSource.refresh();
+        },
+        error: function (req, textStatus, errorThrown) {
+            alert('Update Feature Error: ' + textStatus + ' ' + errorThrown);
+        }
+    });
+};
+
 //Adds feature
+function addFeature(geoJson) {
+    $.ajax({
+        url: "WebService1.asmx/addFeature",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({ feature: geoJson }),
+        method: "post",
+        dataType: "json",
+        success: function () { //data.d
+            console.log("Successfully added!");
+            wmsLayerSource.refresh();
+        },
+        error: function (req, textStatus, errorThrown) {
+            alert('Add Feature Error: ' + textStatus + ' ' + errorThrown);
+        }
+    });
+};
+
+
 $(function () {
     $("#add").click(function () {
         if (select !== null) {
@@ -272,12 +303,15 @@ $(function () {
     });
 });
 
-//Clears map //NOT WORKING
+//Clears map
 function clearMap() {
+    if (!(confirm("Are you sure?"))) {
+        return;
+    }
     var featureList = vectorSource.getFeatures();
 
     $.ajax({
-        url: "WebService1.asmx/truncateTable",
+        url: "WebService1.asmx/clearMap",
         data: {},
         method: "post",
         success: function () {
@@ -285,6 +319,7 @@ function clearMap() {
                 vectorSource.removeFeature(item)
             });
             alert("Successfully cleared!");
+            wmsLayerSource.refresh();
         },
         error: function (req, textStatus, errorThrown) {
             alert('ERROR: ' + textStatus + ' ' + errorThrown);

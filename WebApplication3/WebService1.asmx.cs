@@ -31,48 +31,38 @@ namespace WebApplication3
         }
 
         [WebMethod]
-        public void updateDatabase(string feature)
-        {
-            NpgsqlConnection conn = connectDB();
-            Feature featured = JsonConvert.DeserializeObject<Feature>(feature);
-
-
-            conn.Open();
-
-            //string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
-            //$"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
-
-            string updateQuery = $"INSERT INTO public.\"FEATURES\" (gid, type, geom) VALUES" +
-                $"DEFAULT, '{featured.type}', " +
-                $"ST_GeomFromGeoJSON('{featured.geometry}')";
-
-            NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
-            int row = command.ExecuteNonQuery();
-            Console.WriteLine(row);
-            //NpgsqlDataReader dr = command.ExecuteReader();
-
-            //return feature;
-
-        }
-
-        [WebMethod]
         public void addFeature(string feature)
         {
             NpgsqlConnection conn = connectDB();
             Feature featured = JsonConvert.DeserializeObject<Feature>(feature);
 
+            conn.Open();
 
+            string insertQuery = $"INSERT INTO public.\"FEATURES\" (type, geom) VALUES" +
+                $" ('{featured.type}', " +
+                $"ST_GeomFromGeoJSON('{featured.geometry}'))";
+
+            NpgsqlCommand command = new NpgsqlCommand(insertQuery, conn);
+            command.ExecuteNonQuery();
+        }
+
+        [WebMethod]
+        public void updateFeature(string feature)
+        {
+            NpgsqlConnection conn = connectDB();
+            Feature featured = JsonConvert.DeserializeObject<Feature>(feature);
 
             conn.Open();
-            string insertQquery = $"INSERT INTO public.\"FEATURES\" (gid, type, geom, properties) VALUES" +
-                $"({featured.id}, '{featured.type}', " +
-                $"ST_GeomFromGeoJSON('{featured.geometry}')," +
-                $" '{featured.properties}');";
 
-            NpgsqlCommand command = new NpgsqlCommand(insertQquery, conn);
+            string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
+            $"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
+
+            
+
+            NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
             int row = command.ExecuteNonQuery();
-            Console.WriteLine(row);
-        }
+
+        }        
 
         [WebMethod]
         public void deleteFeature(int id)
@@ -120,11 +110,11 @@ namespace WebApplication3
         }
 
         [WebMethod]
-        public void truncateTable()
+        public void clearMap()
         {
             NpgsqlConnection conn = connectDB();
             conn.Open();
-            string truncateQuery = "TRUNCATE public.\"FEATURES\"";
+            string truncateQuery = "TRUNCATE public.\"FEATURES\" RESTART IDENTITY";
 
             NpgsqlCommand command = new NpgsqlCommand(truncateQuery, conn);
             command.ExecuteNonQuery();
