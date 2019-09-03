@@ -7,18 +7,53 @@ var lastId = 0;
 var geoFormat = new ol.format.GeoJSON;
 
 
-//Raster layer
+//OSM Raster layer
 const rasterSource = new ol.source.OSM();
 const rasterLayer = new ol.layer.Tile({
-    source: rasterSource
-})
+    source: rasterSource,
+    type: "base",
+    title: "OSM Raster"
+});
 
-//Feature layer as image
+//XYZ Raster layer
+const xyzSource = new ol.source.XYZ({
+    url: 'https://{a-c}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png' +
+        '?apikey=6794f5053b024ec3afebc80a67f5c5f9'
+});
+const xyzLayer = new ol.layer.Tile({
+    source: xyzSource,
+    type: "base",
+    title: "XYZ Raster"
+});
+
+//Bing Raster Layer
+const bingSource = new ol.source.BingMaps({
+    key: 'Aggs4w9zy4myZUovZQJAK2O7z5wQOZDi2rQaPgHbUHTBVdgv69zrnpMjxNYUMTOU',
+    imagerySet: 'RoadOnDemand'
+});
+const bingLayer = new ol.layer.Tile({
+    source: bingSource,
+    type: "base",
+    title: "Bing Raster"
+});
+
+//Stamen Raster layer
+const stamenSource = new ol.source.Stamen({
+    layer: "watercolor"
+});
+const stamenLayer = new ol.layer.Tile({
+    source: stamenSource,
+    type: "base",
+    title: "Stamen Raster"
+});
+
+//ImageWMS Layer
 const wmsLayerSource = new ol.source.ImageWMS({
     url: 'http://localhost:8090/geoserver/wms?Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
 });
 const wmsLayer = new ol.layer.Image({
-    source: wmsLayerSource
+    source: wmsLayerSource,
+    title: "WMS Features"
 });
 
 //Features as vector layer
@@ -45,7 +80,7 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterLayer, vectorLayer, wmsLayer],
+    layers: [bingLayer, xyzLayer, stamenLayer, rasterLayer, vectorLayer, wmsLayer],
     target: 'map',
     view: new ol.View({
         center: [0, 0],
@@ -53,6 +88,9 @@ const map = new ol.Map({
     }),
     overlays: [overlay]
 });
+
+var layerSwitcher = new ol.control.LayerSwitcher();
+map.addControl(layerSwitcher);
 
 //Add popup
 function addPopup(data) {
