@@ -44,6 +44,7 @@ namespace WebApplication3
 
             NpgsqlCommand command = new NpgsqlCommand(insertQuery, conn);
             command.ExecuteNonQuery();
+            conn.Close();
         }
 
         [WebMethod]
@@ -61,8 +62,9 @@ namespace WebApplication3
 
             NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
             int row = command.ExecuteNonQuery();
+            conn.Close();
 
-        }        
+        }
 
         [WebMethod]
         public void deleteFeature(int id)
@@ -76,7 +78,8 @@ namespace WebApplication3
 
             NpgsqlCommand command = new NpgsqlCommand(deleteQuery, conn);
             command.ExecuteNonQuery();
-            
+            conn.Close();
+
         }
 
         [WebMethod]
@@ -104,6 +107,7 @@ namespace WebApplication3
                 //featuresList.Add(JsonConvert.SerializeObject(feature));
                 featuresList.Add(feature);
             }
+            conn.Close();
 
             return featuresList;
         }
@@ -117,6 +121,8 @@ namespace WebApplication3
 
             NpgsqlCommand command = new NpgsqlCommand(truncateQuery, conn);
             command.ExecuteNonQuery();
+            conn.Close();
+
         }
 
     }

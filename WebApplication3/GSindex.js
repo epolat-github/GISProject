@@ -23,9 +23,9 @@ const wmsLayer = new ol.layer.Image({
 
 //Features as vector layer
 const vectorSource = new ol.source.Vector({
-    format: geoFormat,
-    url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&' +
-        'request=GetFeature&typeName=nyc%3AFEATURES&outputFormat=application%2Fjson',
+    //format: geoFormat,
+    //url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&' +
+    //    'request=GetFeature&typeName=nyc%3AFEATURES&outputFormat=application%2Fjson',
 });
 const vectorLayer = new ol.layer.Vector({
     source: vectorSource
@@ -56,53 +56,132 @@ const map = new ol.Map({
 
 //Add popup
 function addPopup(data) {
-    var id = data.features[0].properties.gid;
-    var name = data.features[0].id;
-    var type = data.features[0].geometry.type;
-    var coordinateArray = data.features[0].geometry.coordinates[0];
-    var coorText = ol.coordinate.toStringHDMS(ol.proj.toLonLat(coordinateArray[0]));
-    var innerHtml = "<table>" + coorText + "</table><tr><th>ID</th><td>" + id + "</td></tr><tr>" +
-        "<th>Name</th><td>" + name + "</td></tr><tr><th>Type</th>" +
-        "<td>" + type + "</td></tr><tr><th>Coords</th>" +
-        "<td></td></tr>";
-    $("#propTable").html(innerHtml);
-    overlay.setPosition(coordinateArray[0]);
+    var id = data.getId();
+    if (id === undefined) {
+        $('#propTable').html("Not yet uploaded to DB");
+        //var coordinateArray = data.getGeometry().extent_;
+        var type = data.getGeometry().getType();
+    }
+    else {
+        id = data.values_.gid;
+        var name = data.getId();
+        var type = data.getGeometry().getType();
+        var coordinateArray = data.getGeometry().extent_;
+        var coorText = ol.coordinate.toStringHDMS(ol.proj.toLonLat(coordinateArray));
+        var innerHtml = "<table>" + coorText + "</table><tr><th>ID</th><td>" + id + "</td></tr><tr>" +
+            "<th>Name</th><td>" + name + "</td></tr><tr><th>Type</th>" +
+            "<td>" + type + "</td></tr><tr><th>Coords</th>" +
+            "<td></td></tr>";
+        $("#propTable").html(innerHtml);
+    }
+    
+    //sets overlay position
+    switch (type) {                 
+        case ("Point"):
+            overlay.setPosition(data.getGeometry().getCoordinates());
+            break;
+        case ("LineString"):
+            overlay.setPosition(data.getGeometry().getCoordinates()[0]);
+            break;
+        case ("Polygon"):
+            overlay.setPosition(data.getGeometry().getCoordinates()[0][0]);
+            break;
+        default:
+            console.log("Unknown style!");
+    }
+    
     //overlay.setPosition(coordinateArray[0][0], coordinateArray[0][1]);
     //alert("Successfully selected!");
     console.log(data);
 }
 
 //Getting info of selected feature from GeoServer
-select.on("select", function (e) {
-    if (e.selected.length === 0) {      //popup removing
-        overlay.setPosition(undefined);
-        return;
+map.on('click', function (evt) {
+    //var url = wmsLayerSource.getGetFeatureInfoUrl(
+    //    evt.coordinate, map.getView().getResolution(),
+    //    map.getView().getProjection());
+    //if (url !== undefined) {
+    //    console.log("clicked");
+    //}
+    overlay.setPosition(undefined);
+    if (selectSitu === true) {
+        vectorSource.forEachFeature(function (e) { //clears the vector source
+            vectorSource.removeFeature(e)
+        });
+        map.forEachLayerAtPixel(evt.pixel, function (layer) {
+            if (layer.getType() === "IMAGE") {      //if clicked to wmsLayer
+                var url = wmsLayerSource.getGetFeatureInfoUrl(
+                    evt.coordinate, map.getView().getResolution(),
+                    map.getView().getProjection(), {
+                        'INFO_FORMAT': 'application/json',
+                        'QUERY_LAYERS': 'nyc:FEATURES'});
+
+                if (url !== undefined) {
+                    $.ajax({
+                        url: url,
+                        method: 'post',
+                        success: function (data) {
+                            var featureObj = geoFormat.readFeature(data.features[0]);
+                            vectorSource.addFeature(featureObj);
+                            addPopup(featureObj);
+                        },
+                        error: function (req, textStatus, errorThrown) {
+                            console.log("Error" + textStatus + errorThrown);
+                        }
+                    })
+                }
+            }
+        })
     }
-    var selected = e.selected;
-    var props = selected[0].getProperties(); //properties object
-    var geomObj = props.geometry;            //geometry object
-    var extentArray = geomObj.getExtent();   //extend array
-    var extentString = extentArray.join();
-    $.ajax({
-        url: 'http://localhost:8090/geoserver/nyc/wms?' +
-            '&INFO_FORMAT=application/json' +
-            '&REQUEST=GetFeatureInfo' +
-            '&SRS=EPSG: 3857' +
-            '&SERVICE=WMS' +
-            '&VERSION=1.1.0' +
-            '&WIDTH=966&HEIGHT=482&X=486&Y=165' +
-            '&QUERY_LAYERS=nyc:FEATURES' +
-            '&LAYERS=nyc:FEATURES' +
-            '&BBOX=' + extentString,
-        method: "post",
-        success: function (data) {
-            addPopup(data);         //popup feature
-        },
-        error: function (req, textStatus, errorThrown) {
-            alert('ERROR: ' + textStatus + ' ' + errorThrown);
-        }
-    });
 });
+
+
+
+
+
+//select.on("select", function (e) {
+//    if (e.selected.length === 0) {
+//        overlay.setPosition(undefined);
+//        return;
+//    }
+//    var selected = e.selected;
+//    vectorSource.getFeatures().forEach(function (t) {
+//        if (selected[0] === t) {
+//            addPopup(t);
+//        }
+//    });
+//});
+//select.on("select", function (e) {
+//    if (e.selected.length === 0) {      //popup removing
+//        overlay.setPosition(undefined);
+//        return;
+//    }
+//    var selected = e.selected;
+//    var props = selected[0].getProperties(); //properties object
+//    var geomObj = props.geometry;            //geometry object
+//    var extentArray = geomObj.getExtent();   //extend array
+//    var extentString = extentArray.join();
+//    $.ajax({
+//        url: 'http://localhost:8090/geoserver/nyc/wms?' +
+//            '&INFO_FORMAT=application/json' +
+//            '&REQUEST=GetFeatureInfo' +
+//            '&SRS=EPSG: 3857' +
+//            '&SERVICE=WMS' +
+//            '&VERSION=1.1.0' +
+//            '&WIDTH=966&HEIGHT=482&X=486&Y=165' +
+//            '&QUERY_LAYERS=nyc:FEATURES' +
+//            '&LAYERS=nyc:FEATURES' +
+//            '&BBOX=' + extentString,
+//        method: "post",
+//        success: function (data) {
+//            addPopup(data);         //popup feature
+//        },
+//        error: function (req, textStatus, errorThrown) {
+//            alert('ERROR: ' + textStatus + ' ' + errorThrown);
+//        }
+//    });
+//});
+
 var selectSitu = false;
 $(function () {
     $("#select").click(function () {
@@ -111,6 +190,10 @@ $(function () {
             map.addInteraction(currentInter);
             $("#select").toggleClass("buttonEnabled"); //for CSS
             selectSitu = false;
+
+            vectorSource.forEachFeature(function (e) { //clears the vector source
+                vectorSource.removeFeature(e);
+            });
         }
         else {
             selectSitu = true;
@@ -211,6 +294,9 @@ $(function () {
                 updateFeature(geoJsonObject);
             }            
         }
+        vectorSource.forEachFeature(function (e) { //clears the vector source
+            vectorSource.removeFeature(e)
+        });
     });
 });
 
@@ -223,11 +309,11 @@ function updateFeature(geoJson) {
         method: "post",
         dataType: "json",
         success: function () { //data.d
-            console.log("Successfully updated!");
             wmsLayerSource.refresh();
+            console.log("Successfully updated!");            
         },
         error: function (req, textStatus, errorThrown) {
-            alert('Update Feature Error: ' + textStatus + ' ' + errorThrown);
+            //alert('Update Feature Error: ' + textStatus + ' ' + errorThrown);
         }
     });
 };
@@ -241,8 +327,8 @@ function addFeature(geoJson) {
         method: "post",
         dataType: "json",
         success: function () { //data.d
-            console.log("Successfully added!");
             wmsLayerSource.refresh();
+            console.log("Successfully added!");
         },
         error: function (req, textStatus, errorThrown) {
             alert('Add Feature Error: ' + textStatus + ' ' + errorThrown);
@@ -282,9 +368,11 @@ $(function () {
         if (select.getFeatures().values_.length != 0) {
             var allFeatures = select.getFeatures();
             var featToDel = allFeatures.item(0);
-            var deleteId = featToDel.getId(); //string id
+            var deleteId = featToDel.getId();   //string id
             if (deleteId == undefined) {        //deletion before sync (no id appointed yet)
                 vectorSource.removeFeature(featToDel);
+                select.getFeatures().clear();
+                alert("Deleted");
                 return;
             }
             deleteId = parseInt(deleteId.substring(9)); //int id
@@ -303,6 +391,7 @@ $(function () {
                 $("#select").trigger('click');
                 wmsLayerSource.refresh();
                 select.getFeatures().clear();
+                overlay.setPosition(undefined);
                 alert("Successfully deleted!");
             },
             error: function (req, textStatus, errorThrown) {
