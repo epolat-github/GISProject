@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Services;
 using Newtonsoft.Json;
 using Npgsql;
@@ -10,14 +7,13 @@ using Npgsql;
 namespace WebApplication3
 {
     /// <summary>
-    /// Summary description for WebService1
+    /// Web Service to work with PostgreSQL
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
     [System.ComponentModel.ToolboxItem(false)]
-    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
     [System.Web.Script.Services.ScriptService]
-    public class WebService1 : System.Web.Services.WebService
+    public class WebService1 : WebService
     {
 
         private NpgsqlConnection connectDB()
@@ -58,7 +54,7 @@ namespace WebApplication3
             string updateQuery = $"UPDATE public.\"FEATURES\" SET geom = " +
             $"ST_GeomFromGeoJSON('{featured.geometry}') WHERE gid = {featured.id}"; //updates just GEOMETRY attr.
 
-            
+
 
             NpgsqlCommand command = new NpgsqlCommand(updateQuery, conn);
             int row = command.ExecuteNonQuery();
@@ -103,8 +99,7 @@ namespace WebApplication3
                 Object geom = dr[2];
                 string prop = dr[3].ToString();
 
-                feature = new Feature(id, type, geom, prop);
-                //featuresList.Add(JsonConvert.SerializeObject(feature));
+                feature = new Feature(id, type, geom);
                 featuresList.Add(feature);
             }
             conn.Close();
