@@ -10,8 +10,8 @@ var geoFormat = new ol.format.GeoJSON;
 //OSM Raster layer
 const rasterSource = new ol.source.OSM();
 const rasterLayer = new ol.layer.Tile({
-    source: rasterSource,
     type: "base",
+    source: rasterSource,
     title: "OSM Raster"
 });
 
@@ -57,13 +57,24 @@ const wmsLayer = new ol.layer.Image({
 });
 
 //Features as vector layer
-const vectorSource = new ol.source.Vector({
-    //format: geoFormat,
-    //url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&' +
-    //    'request=GetFeature&typeName=nyc%3AFEATURES&outputFormat=application%2Fjson',
-});
+const vectorSource = new ol.source.Vector();
 const vectorLayer = new ol.layer.Vector({
-    source: vectorSource
+    source: vectorSource,
+    title: "Drawings"
+});
+
+//Layer Groups
+const featuresGroup = new ol.layer.Group({
+    fold: 'open',
+    title: "Features",
+    layers: [wmsLayer, vectorLayer]
+});
+
+const rasterGroup = new ol.layer.Group({
+    fold: 'open',
+    //type: 'base',
+    title: "Rasters",
+    layers: [bingLayer, xyzLayer, stamenLayer, rasterLayer]
 });
 
 //selection
@@ -80,17 +91,27 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [bingLayer, xyzLayer, stamenLayer, rasterLayer, vectorLayer, wmsLayer],
+    layers: [rasterGroup, featuresGroup],
     target: 'map',
+    overlays: [overlay],
     view: new ol.View({
-        center: [0, 0],
-        zoom: 2
-    }),
-    overlays: [overlay]
+        center: [9149941.76628828, 5093518.010970779],
+        zoom: 3
+    })
 });
 
-var layerSwitcher = new ol.control.LayerSwitcher();
+//Layer Switcher
+var layerSwitcher = new ol.control.LayerSwitcher({
+    groupSelectStyle: "none",
+    enableOpacitySliders: true
+});
 map.addControl(layerSwitcher);
+
+//Layer Opacity Slider
+//var slider = document.getElementById("opacitySlider");
+//slider.oninput = function () {
+//    rasterGroup.setOpacity(this.value / 100);
+//}
 
 //Add popup
 function addPopup(data) {
@@ -112,9 +133,9 @@ function addPopup(data) {
             "<td></td></tr>";
         $("#propTable").html(innerHtml);
     }
-    
+
     //sets overlay position
-    switch (type) {                 
+    switch (type) {
         case ("Point"):
             overlay.setPosition(data.getGeometry().getCoordinates());
             break;
@@ -127,7 +148,7 @@ function addPopup(data) {
         default:
             console.log("Unknown style!");
     }
-    
+
     //overlay.setPosition(coordinateArray[0][0], coordinateArray[0][1]);
     //alert("Successfully selected!");
     console.log(data);
@@ -141,41 +162,43 @@ map.on('click', function (evt) {
     //if (url !== undefined) {
     //    console.log("clicked");
     //}
-    overlay.setPosition(undefined);
-    if (selectSitu === true) {
-        vectorSource.forEachFeature(function (e) { //clears the vector source
-            vectorSource.removeFeature(e)
-        });
-        map.forEachLayerAtPixel(evt.pixel, function (layer) {
-            if (layer.getType() === "IMAGE") {      //if clicked to wmsLayer
-                var url = wmsLayerSource.getGetFeatureInfoUrl(
-                    evt.coordinate, map.getView().getResolution(),
-                    map.getView().getProjection(), {
-                        'INFO_FORMAT': 'application/json',
-                        'QUERY_LAYERS': 'nyc:FEATURES'});
-
-                if (url !== undefined) {
-                    $.ajax({
-                        url: url,
-                        method: 'post',
-                        success: function (data) {
-                            var featureObj = geoFormat.readFeature(data.features[0]);
-                            vectorSource.addFeature(featureObj);
-                            addPopup(featureObj);
-                        },
-                        error: function (req, textStatus, errorThrown) {
-                            console.log("Error" + textStatus + errorThrown);
-                        }
-                    })
-                }
-            }
-        })
+    if (drawSitu === true || modSituation === true) {
+        return;
     }
+    overlay.setPosition(undefined);
+
+    //vectorSource.forEachFeature(function (e) { //clears the vector source
+    //    vectorSource.removeFeature(e)
+    //});
+
+    map.forEachLayerAtPixel(evt.pixel, function (layer) {
+        if (layer.getType() === "IMAGE") {      //if clicked to wmsLayer(to a feature)
+            var url = wmsLayerSource.getGetFeatureInfoUrl(
+                evt.coordinate, map.getView().getResolution(),
+                map.getView().getProjection(), {
+                    'INFO_FORMAT': 'application/json',
+                    'QUERY_LAYERS': 'nyc:FEATURES'
+                });
+
+            if (url !== undefined) {
+                $.ajax({
+                    url: url,
+                    method: 'post',
+                    success: function (data) {
+                        var featureObj = geoFormat.readFeature(data.features[0]);
+                        vectorSource.addFeature(featureObj);
+                        selectedFeature = featureObj;
+                        addPopup(featureObj);
+                    },
+                    error: function (req, textStatus, errorThrown) {
+                        console.log("Error" + textStatus + errorThrown);
+                    }
+                })
+            }
+        }
+    })
+
 });
-
-
-
-
 
 //select.on("select", function (e) {
 //    if (e.selected.length === 0) {
@@ -220,30 +243,46 @@ map.on('click', function (evt) {
 //    });
 //});
 
-var selectSitu = false;
-$(function () {
-    $("#select").click(function () {
-        if (selectSitu) {
-            map.removeInteraction(select);
-            map.addInteraction(currentInter);
-            $("#select").toggleClass("buttonEnabled"); //for CSS
-            selectSitu = false;
+//var selectSitu = true;
+//$(function () {
+//    $("#select").click(function () {
+//        if (selectSitu) {
+//            map.removeInteraction(select);
+//            map.addInteraction(currentInter);
+//            $("#select").toggleClass("buttonEnabled"); //for CSS
+//            selectSitu = false;
 
-            vectorSource.forEachFeature(function (e) { //clears the vector source
-                vectorSource.removeFeature(e);
-            });
-        }
-        else {
-            selectSitu = true;
-            $("#select").toggleClass("buttonEnabled"); //for CSS
-            map.removeInteraction(currentInter);
-            map.addInteraction(select);
-        }
-    });
-});
+//            vectorSource.forEachFeature(function (e) { //clears the vector source
+//                vectorSource.removeFeature(e);
+//            });
+//        }
+//        else {
+//            selectSitu = true;
+//            $("#select").toggleClass("buttonEnabled"); //for CSS
+//            map.removeInteraction(currentInter);
+//            map.addInteraction(select);
+//        }
+//    });
+//});
 
 //defines drawings
-addInter("Point");
+
+//addInter("Point");
+var drawSitu = false;
+
+$("#draw").click(function () {
+    if (!drawSitu) {
+        combo.disabled = false;
+        $("#draw").toggleClass("buttonEnabled");
+        changeDrawType();
+    }
+    else {
+        combo.disabled = true;
+        $("#draw").toggleClass("buttonEnabled");
+        map.removeInteraction(currentInter);
+    }
+    drawSitu = !drawSitu;
+})
 
 function addInter(type) {
     currentInter = new ol.interaction.Draw({
@@ -256,7 +295,7 @@ function addInter(type) {
 combo.addEventListener("click", changeDrawType);
 
 function changeDrawType() {
-    //var selection = document.getElementById("drawTypes");
+    
     var selectedType = combo.value;
 
     map.removeInteraction(currentInter);
@@ -271,23 +310,22 @@ var modify = new ol.interaction.Modify({
     source: vectorSource
 });
 var modSituation = false; //false, not modifying; true, modifying
-var comboBox = document.getElementById("drawTypes");
 
-function Modify() {
-    if (modSituation) { // modify button = off
+$("#modify").click(function () {
+    if (!modSituation) {
+        map.removeInteraction(currentInter);
+        modSituation = true;
+        map.addInteraction(modify); 
+        map.removeOverlay(overlay);
+    }
+    else {
         map.removeInteraction(modify);
         modSituation = false;
-        map.addInteraction(currentInter); // adds drawings back
-        comboBox.disabled = false;
-    }
-    else {              // modify button = on
-        map.removeInteraction(currentInter); //to prevent from having two dots on the screen
-        modSituation = true;
-        map.addInteraction(modify);
-        comboBox.disabled = true;
+        map.addOverlay(overlay);
+        
     }
     $("#modify").toggleClass("buttonEnabled");
-}
+})
 
 //SNAP FEATURE 
 //add Snap feature
@@ -318,7 +356,7 @@ $(function () {
         var allFeatures = vectorSource.getFeatures();
         var i;
         for (i = 0; i < allFeatures.length; i++) {
-            let feature = allFeatures[i];            
+            let feature = allFeatures[i];
 
             if (feature.id_ === undefined) { //new features don't assigned id
                 geoJsonObject = geoFormat.writeFeature(feature);
@@ -330,7 +368,10 @@ $(function () {
                 feature.setId(newID);
                 geoJsonObject = geoFormat.writeFeature(feature);
                 updateFeature(geoJsonObject);
-            }            
+                if (modSituation) {
+                    $("#modify").trigger("click");
+                }
+            }
         }
         vectorSource.forEachFeature(function (e) { //clears the vector source
             vectorSource.removeFeature(e)
@@ -348,7 +389,8 @@ function updateFeature(geoJson) {
         dataType: "json",
         success: function () { //data.d
             wmsLayerSource.refresh();
-            console.log("Successfully updated!");            
+            wmsLayerSource.updateParams({ "time": Date.now() });
+            console.log("Successfully updated!");
         },
         error: function (req, textStatus, errorThrown) {
             //alert('Update Feature Error: ' + textStatus + ' ' + errorThrown);
@@ -365,8 +407,9 @@ function addFeature(geoJson) {
         method: "post",
         dataType: "json",
         success: function () { //data.d
-            wmsLayerSource.refresh();
             console.log("Successfully added!");
+            wmsLayerSource.refresh();
+            wmsLayerSource.updateParams({ "time": Date.now() });
         },
         error: function (req, textStatus, errorThrown) {
             alert('Add Feature Error: ' + textStatus + ' ' + errorThrown);
@@ -401,45 +444,72 @@ $(function () {
 });
 
 //Deletes specific feature
-$(function () {
-    $("#delete").click(function () {
-        if (select.getFeatures().values_.length != 0) {
-            var allFeatures = select.getFeatures();
-            var featToDel = allFeatures.item(0);
-            var deleteId = featToDel.getId();   //string id
-            if (deleteId == undefined) {        //deletion before sync (no id appointed yet)
-                vectorSource.removeFeature(featToDel);
-                select.getFeatures().clear();
-                alert("Deleted");
-                return;
-            }
-            deleteId = parseInt(deleteId.substring(9)); //int id
-        }
-        else {
-            alert("No feature selected!");
-            return;
-        }
+var selectedFeature;
+$("#delBut").click(function () {
+    if (selectedFeature !== null) {
+
+        var id = selectedFeature.getProperties().gid;
 
         $.ajax({
             url: "WebService1.asmx/deleteFeature",
-            data: { id: deleteId },
+            data: { id: id },
             method: "post",
-            success: function () { //data.d
-                vectorSource.removeFeature(featToDel);
-                $("#select").trigger('click');
+            success: function () {
+                vectorSource.removeFeature(selectedFeature);
                 wmsLayerSource.refresh();
-                select.getFeatures().clear();
+                wmsLayerSource.updateParams({ "time": Date.now() });
                 overlay.setPosition(undefined);
                 alert("Successfully deleted!");
             },
             error: function (req, textStatus, errorThrown) {
-                $("#select").trigger('click');
                 select.getFeatures().clear();
                 alert('Deletion Error: ' + textStatus + ' ' + errorThrown);
             }
         });
-    });
+    }
 });
+
+
+//Deletes specific feature
+//$(function () {
+//    $("#delete").click(function () {
+//        if (select.getFeatures().values_.length != 0) {
+//            var allFeatures = select.getFeatures();
+//            var featToDel = allFeatures.item(0);
+//            var deleteId = featToDel.getId();   //string id
+//            if (deleteId == undefined) {        //deletion before sync (no id appointed yet)
+//                vectorSource.removeFeature(featToDel);
+//                select.getFeatures().clear();
+//                alert("Deleted");
+//                return;
+//            }
+//            deleteId = parseInt(deleteId.substring(9)); //int id
+//        }
+//        else {
+//            alert("No feature selected!");
+//            return;
+//        }
+
+//        $.ajax({
+//            url: "WebService1.asmx/deleteFeature",
+//            data: { id: deleteId },
+//            method: "post",
+//            success: function () { //data.d
+//                vectorSource.removeFeature(featToDel);
+//                $("#select").trigger('click');
+//                wmsLayerSource.refresh();
+//                select.getFeatures().clear();
+//                overlay.setPosition(undefined);
+//                alert("Successfully deleted!");
+//            },
+//            error: function (req, textStatus, errorThrown) {
+//                $("#select").trigger('click');
+//                select.getFeatures().clear();
+//                alert('Deletion Error: ' + textStatus + ' ' + errorThrown);
+//            }
+//        });
+//    });
+//});
 
 //Clears map
 function clearMap() {
@@ -458,12 +528,25 @@ function clearMap() {
             });
             alert("Successfully cleared!");
             wmsLayerSource.refresh();
+            wmsLayerSource.updateParams({ "time": Date.now() });
         },
         error: function (req, textStatus, errorThrown) {
             alert('ERROR: ' + textStatus + ' ' + errorThrown);
         }
     });
 }
+
+//Deselect selected features
+$("#deselect").click(function () {
+    vectorSource.forEachFeature(function (e) { //clears the vector source
+        vectorSource.removeFeature(e)
+    });
+})
+
+//Clears Vector Layer (drawings)
+$("#clearFeat").click(function () {
+    vectorSource.clear();
+})
 
 //loads map from geoJsonObject
 function loadMap() {
