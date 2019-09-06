@@ -154,6 +154,112 @@ function addPopup(data) {
     console.log(data);
 }
 
+//Add additional info popup
+$(function () {
+    $("#infoBut").click(function () {
+        $(".pop-outer").fadeIn("slow");
+        var name;
+        var type;
+        var comment;
+        var props = selectedFeature.getProperties();
+        var id = props.gid;
+        
+        $.ajax({
+            url: "WebService1.asmx/getAdditionalInfo",
+            contentType: "application/json; charset=utf-8",
+            method: 'post',
+            data: JSON.stringify({ id: id }),
+            success: function (data) {
+                var infos = JSON.parse(data.d);
+                if (infos.length !== 0) {
+                    name = infos[0];
+                    type = infos[1];
+                    comment = infos[2];
+                }
+                else {
+                    name = "Not entered before";
+                    type = "Not entered before";
+                    comment = "Not entered before";
+                }
+
+                $("#id").html(id);
+                $("#name").html(name);
+                $("#type").html(type);
+                $("#comment").html(comment);
+            },
+            error: function (req, textStatus, errorThrown) {
+                console.log("Error" + textStatus + errorThrown + "\n info not found");
+            }
+        })        
+    });
+    $(".close").click(function () { //close popup
+        $(".pop-outer").fadeOut("slow");
+        $("#resetInput").hide();
+        $("#submit").hide();
+        $("#edit").show();
+
+        $("#name").html("Not entered before").attr("contenteditable", "false");
+        $("#type").html("Not entered before").attr("contenteditable", "false");
+        $("#comment").html("Not entered before").attr("contenteditable", "false");
+    });
+})
+
+//Edit additional info
+$(function () {
+    $("#edit").click(function () {
+        $("#name").html("").attr("contenteditable", "true");
+        $("#type").html("").attr("contenteditable", "true");
+        $("#comment").html("").attr("contenteditable", "true");
+
+        $("#edit").hide();
+
+        $("#resetInput").show().click(function () {
+            $("#name").html("Not entered before").attr("contenteditable", "false");
+            $("#type").html("Not entered before").attr("contenteditable", "false");
+            $("#comment").html("Not entered before").attr("contenteditable", "false");
+
+            $("#resetInput").hide();
+            $("#submit").hide();
+            $("#edit").show();
+
+        });
+
+        $("#submit").show().click(function () {
+            var newId = $("#id").html();
+            var newName = $("#name").html();
+            var newType = $("#type").html();
+            var newComment = $("#comment").html();
+
+            if (newName === "" && newType === "" && newComment === "") {
+                alert("Check the inputs!");
+                return;
+            }
+
+            $.ajax({
+                url: "WebService1.asmx/addAdditionalInfo",
+                method: "post",
+                data: {
+                    "id": newId,
+                    "name": newName,
+                    "type": newType,
+                    "comment": newComment
+                },
+                success: function () {
+                    $("#name").attr("contenteditable", "false");
+                    $("#type").attr("contenteditable", "false");
+                    $("#comment").attr("contenteditable", "false");
+                },
+                error: function (textStatus, errorThrown) {
+                    console.log("Error: " + textStatus + " " + errorThrown);
+                }
+            })
+        });
+
+
+
+    })
+})
+
 //Getting info of selected feature from GeoServer
 map.on('click', function (evt) {
     //var url = wmsLayerSource.getGetFeatureInfoUrl(
@@ -200,74 +306,7 @@ map.on('click', function (evt) {
 
 });
 
-//select.on("select", function (e) {
-//    if (e.selected.length === 0) {
-//        overlay.setPosition(undefined);
-//        return;
-//    }
-//    var selected = e.selected;
-//    vectorSource.getFeatures().forEach(function (t) {
-//        if (selected[0] === t) {
-//            addPopup(t);
-//        }
-//    });
-//});
-//select.on("select", function (e) {
-//    if (e.selected.length === 0) {      //popup removing
-//        overlay.setPosition(undefined);
-//        return;
-//    }
-//    var selected = e.selected;
-//    var props = selected[0].getProperties(); //properties object
-//    var geomObj = props.geometry;            //geometry object
-//    var extentArray = geomObj.getExtent();   //extend array
-//    var extentString = extentArray.join();
-//    $.ajax({
-//        url: 'http://localhost:8090/geoserver/nyc/wms?' +
-//            '&INFO_FORMAT=application/json' +
-//            '&REQUEST=GetFeatureInfo' +
-//            '&SRS=EPSG: 3857' +
-//            '&SERVICE=WMS' +
-//            '&VERSION=1.1.0' +
-//            '&WIDTH=966&HEIGHT=482&X=486&Y=165' +
-//            '&QUERY_LAYERS=nyc:FEATURES' +
-//            '&LAYERS=nyc:FEATURES' +
-//            '&BBOX=' + extentString,
-//        method: "post",
-//        success: function (data) {
-//            addPopup(data);         //popup feature
-//        },
-//        error: function (req, textStatus, errorThrown) {
-//            alert('ERROR: ' + textStatus + ' ' + errorThrown);
-//        }
-//    });
-//});
-
-//var selectSitu = true;
-//$(function () {
-//    $("#select").click(function () {
-//        if (selectSitu) {
-//            map.removeInteraction(select);
-//            map.addInteraction(currentInter);
-//            $("#select").toggleClass("buttonEnabled"); //for CSS
-//            selectSitu = false;
-
-//            vectorSource.forEachFeature(function (e) { //clears the vector source
-//                vectorSource.removeFeature(e);
-//            });
-//        }
-//        else {
-//            selectSitu = true;
-//            $("#select").toggleClass("buttonEnabled"); //for CSS
-//            map.removeInteraction(currentInter);
-//            map.addInteraction(select);
-//        }
-//    });
-//});
-
 //defines drawings
-
-//addInter("Point");
 var drawSitu = false;
 
 $("#draw").click(function () {
@@ -540,6 +579,7 @@ function clearMap() {
 $("#deselect").click(function () {
     vectorSource.forEachFeature(function (e) { //clears the vector source
         vectorSource.removeFeature(e)
+        overlay.setPosition(undefined);
     });
 })
 

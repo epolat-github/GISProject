@@ -83,6 +83,58 @@ namespace WebApplication3
         }
 
         [WebMethod]
+        public void addAdditionalInfo(string id, string name, string type, string comment)
+        {
+            int idInt = int.Parse(id);
+
+            NpgsqlConnection conn = connectDB();
+            conn.Open();
+
+            //string updateQuery = $"UPDATE public.additional_information SET \"name\"='{name}', " +
+            //    $"\"type\"='{type}', \"comment\"='{comment}' " +
+            //    $"WHERE gid={id}";
+
+            string insertQuery = "INSERT INTO public.additional_information" +
+                "(gid, \"name\", \"type\", \"comment\")" +
+                $"VALUES({idInt}, '{name}', '{type}', '{comment}') " +
+                $"ON CONFLICT (gid) DO UPDATE " +
+                $"SET \"name\" = excluded.name, \"type\" = excluded.type, " +
+                $"\"comment\" = excluded.comment;";
+
+            NpgsqlCommand command;
+            
+            command = new NpgsqlCommand(insertQuery, conn);
+            command.ExecuteNonQuery();
+           
+            conn.Close();
+        }
+
+        [WebMethod]
+        public string getAdditionalInfo(int id)
+        {
+            NpgsqlConnection conn = connectDB();
+            ArrayList infoList = new ArrayList();
+
+            conn.Open();
+            string selectQuery = "select info.name, info.\"type\", info.\"comment\" " +
+                                "from public.additional_information as info " +
+                                "where gid=" + id;
+            NpgsqlCommand command = new NpgsqlCommand(selectQuery, conn);
+            NpgsqlDataReader dr = command.ExecuteReader();
+
+            while (dr.Read())
+            {
+                infoList.Add(dr[0].ToString()); //name
+                infoList.Add(dr[1].ToString()); //type
+                infoList.Add(dr[2].ToString()); //comment
+            }
+            conn.Close();
+
+            var infoJson = JsonConvert.SerializeObject(infoList);
+            return infoJson;
+        }
+
+        [WebMethod]
         public ArrayList startMap()
         {
             NpgsqlConnection conn = connectDB();

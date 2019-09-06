@@ -37,6 +37,23 @@
             padding: 8px;
         }
 
+        .pop-outer {
+            background-color: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pop-inner {
+            background-color: #fff;
+            width: 500px;
+            height: 300px;
+            padding: 25px;
+            margin: 15% auto;
+        }
+
         .buttonDisabled {
             cursor: pointer;
             padding: 4px 10px 4px 10px;
@@ -101,9 +118,42 @@
     <!--Div to hold overlay popups-->
     <div id="popup">
         <button id="delBut" class="buttonEnabled">Delete</button>
+        <button id="infoBut" class="buttonEnabled">Additional Info</button>
         <table id="propTable"></table>
     </div>
     <!--Div to hold overlay popups-->
+    <!--Div to hold additional info popup-->
+    <div style="display: none;" class="pop-outer">
+        <div class="pop-inner">
+            <button class="close">X</button>
+            <button id="edit" style="float:right">Edit</button>
+            <button id="resetInput" hidden style="float:right">Reset</button>
+            <!--<h2>Additional Information</h2>-->
+            <table id="infoTable" style="width:100%">
+                <caption style="font-weight:bold">Additional Information</caption>
+                <tr>
+                    <th style="width:150px">ID</th>
+                    <td id="id"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Name</th>
+                    <td id="name"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Type</th>
+                    <td id="type"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Comment</th>
+                    <td id="comment"></td>
+                </tr>
+            </table>
+            <button id="submit" hidden style="float:right">Submit</button>
+
+
+        </div>
+    </div>
+    <!--Div to hold additional info popup-->
     <!-- Script -->
     <script src="./GSindex.js"></script>
     <!-- Script -->
