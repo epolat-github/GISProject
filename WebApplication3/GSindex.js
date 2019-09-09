@@ -193,33 +193,48 @@ $(function () {
         })        
     });
     $(".close").click(function () { //close popup
-        $(".pop-outer").fadeOut("slow");
+        $(".pop-outer").fadeOut("fast");
         $("#resetInput").hide();
         $("#submit").hide();
         $("#edit").show();
 
-        $("#name").html("Not entered before").attr("contenteditable", "false");
-        $("#type").html("Not entered before").attr("contenteditable", "false");
-        $("#comment").html("Not entered before").attr("contenteditable", "false");
+        setTimeout(function () {
+            $("#name").html("Not entered before").attr("contenteditable", "false");
+            $("#type").html("Not entered before").attr("contenteditable", "false");
+            $("#comment").html("Not entered before").attr("contenteditable", "false");
+        }, 500);        
     });
 })
 
 //Edit additional info
 $(function () {
     $("#edit").click(function () {
-        $("#name").html("").attr("contenteditable", "true");
-        $("#type").html("").attr("contenteditable", "true");
-        $("#comment").html("").attr("contenteditable", "true");
+        $("#name").attr("contenteditable", "true");
+        $("#type").attr("contenteditable", "true");
+        $("#comment").attr("contenteditable", "true");
 
         $("#edit").hide();
 
         $("#resetInput").show().click(function () {
+            if (!(confirm("Infos will be deleted!"))) {
+                return;
+            }
             $("#name").html("Not entered before").attr("contenteditable", "false");
             $("#type").html("Not entered before").attr("contenteditable", "false");
             $("#comment").html("Not entered before").attr("contenteditable", "false");
 
+            var id = selectedFeature.getProperties().gid;
+            $.ajax({
+                url: "WebService1.asmx/deleteAdditionalInfo",
+                method: 'post',
+                data: { id: id },
+                error: function (req, textStatus, errorThrown) {
+                    console.log("Error" + textStatus + errorThrown + "\n info not found");
+                }
+            })
+
             $("#resetInput").hide();
-            $("#submit").hide();
+            //$("#submit").hide();
             $("#edit").show();
 
         });

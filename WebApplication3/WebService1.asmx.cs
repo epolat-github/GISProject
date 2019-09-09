@@ -101,11 +101,24 @@ namespace WebApplication3
                 $"SET \"name\" = excluded.name, \"type\" = excluded.type, " +
                 $"\"comment\" = excluded.comment;";
 
-            NpgsqlCommand command;
-            
-            command = new NpgsqlCommand(insertQuery, conn);
+            NpgsqlCommand command = new NpgsqlCommand(insertQuery, conn);
+
             command.ExecuteNonQuery();
            
+            conn.Close();
+        }
+
+        [WebMethod]
+        public void deleteAdditionalInfo(int id)
+        {
+
+            NpgsqlConnection conn = connectDB();
+            conn.Open();
+            string deleteQuery = "DELETE FROM public.additional_information WHERE gid=" + id;
+
+            NpgsqlCommand command = new NpgsqlCommand(deleteQuery, conn);
+            command.ExecuteNonQuery();
+
             conn.Close();
         }
 
