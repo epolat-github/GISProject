@@ -21,6 +21,12 @@
             opacity: 0.9;
         }
 
+        #measureSpan{
+            background-color: black;
+            border-color: black;
+            color: whitesmoke;
+        }
+
         html {
             background-color: #04041b;
         }
@@ -110,6 +116,9 @@
     <button class="buttonDisabled" id="clear" onclick="clearMap();">Clear Map</button>
     <button class="buttonDisabled" id="clearFeat">Clear Drawings</button>
     <button class="buttonDisabled" id="deselect">Deselect</button>
+    <input type="checkbox" id="measure" name="measure" value="Measure" />
+    <!--<textarea id="measureText" readonly rows="1" hidden></textarea>-->
+    <span id="measureSpan" hidden></span>
     <!--<input type="range" min="0" max="100" value="100" class="slider" id="opacitySlider">-->
     <!-- Buttons -->
     <!-- Div to hold map -->

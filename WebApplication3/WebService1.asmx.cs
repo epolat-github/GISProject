@@ -182,7 +182,7 @@ namespace WebApplication3
         {
             NpgsqlConnection conn = connectDB();
             conn.Open();
-            string truncateQuery = "TRUNCATE public.\"FEATURES\" RESTART IDENTITY";
+            string truncateQuery = "TRUNCATE public.\"FEATURES\" RESTART identity CASCADE;";
 
             NpgsqlCommand command = new NpgsqlCommand(truncateQuery, conn);
             command.ExecuteNonQuery();

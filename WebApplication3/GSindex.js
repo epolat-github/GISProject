@@ -63,7 +63,49 @@ const vectorLayer = new ol.layer.Vector({
     title: "Drawings"
 });
 
+//Turkey Roads
+const turkeyRoadSource = new ol.source.ImageWMS({    
+    url: 'http://localhost:8090/geoserver/nyc/wms?service=WMS&version=1.1.0&request=GetMap&layers=nyc%3ATurkey_Roads&srs=EPSG%3A4326&format=image%2Fpng',
+})
+const turkeyRoadLayer = new ol.layer.Image({
+    source: turkeyRoadSource,
+    title: "Turkey Roads"
+})
+
+//Turkey Buildings
+const turkeyBuildingSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/nyc/wms?service=WMS&version=1.1.0&request=GetMap&layers=nyc%3ATurkey_Buildings&srs=EPSG%3A4326&format=image%2Fpng'
+})
+const turkeyBuildingLayer = new ol.layer.Image({
+    source: turkeyBuildingSource,
+    title: "Turkey Buildings"
+})
+
+//Turkey Points
+const turkeyPointsSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/nyc/wms?service=WMS&version=1.1.0&request=GetMap&layers=nyc%3ATurkey_Points&srs=EPSG%3A4326&format=image%2Fpng'
+})
+const turkeyPointsLayer = new ol.layer.Image({
+    source: turkeyPointsSource,
+    title: "Turkey Points"
+})
+
+//Turkey Places
+const turkeyPlacesSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3ATurkey_Places&srs=EPSG%3A4326&format=image%2Fpng'
+})
+const turkeyPlacesLayer = new ol.layer.Image({
+    source: turkeyPlacesSource,
+    title: "Turkey Places"
+})
+
 //Layer Groups
+const turkeyGroup = new ol.layer.Group({
+    fold: 'open',
+    title: 'Turkey',
+    layers: [turkeyRoadLayer, turkeyBuildingLayer, turkeyPointsLayer, turkeyPlacesLayer]
+})
+
 const featuresGroup = new ol.layer.Group({
     fold: 'open',
     title: "Features",
@@ -91,12 +133,12 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterGroup, featuresGroup],
+    layers: [rasterGroup, turkeyGroup, featuresGroup],
     target: 'map',
     overlays: [overlay],
     view: new ol.View({
-        center: [9149941.76628828, 5093518.010970779],
-        zoom: 3
+        center: [3658658.33, 4855126.83],
+        zoom: 9
     })
 });
 
@@ -106,12 +148,6 @@ var layerSwitcher = new ol.control.LayerSwitcher({
     enableOpacitySliders: true
 });
 map.addControl(layerSwitcher);
-
-//Layer Opacity Slider
-//var slider = document.getElementById("opacitySlider");
-//slider.oninput = function () {
-//    rasterGroup.setOpacity(this.value / 100);
-//}
 
 //Add popup
 function addPopup(data) {
@@ -163,7 +199,7 @@ $(function () {
         var comment;
         var props = selectedFeature.getProperties();
         var id = props.gid;
-        
+
         $.ajax({
             url: "WebService1.asmx/getAdditionalInfo",
             contentType: "application/json; charset=utf-8",
@@ -190,7 +226,7 @@ $(function () {
             error: function (req, textStatus, errorThrown) {
                 console.log("Error" + textStatus + errorThrown + "\n info not found");
             }
-        })        
+        })
     });
     $(".close").click(function () { //close popup
         $(".pop-outer").fadeOut("fast");
@@ -202,7 +238,7 @@ $(function () {
             $("#name").html("Not entered before").attr("contenteditable", "false");
             $("#type").html("Not entered before").attr("contenteditable", "false");
             $("#comment").html("Not entered before").attr("contenteditable", "false");
-        }, 500);        
+        }, 500);
     });
 })
 
@@ -269,9 +305,6 @@ $(function () {
                 }
             })
         });
-
-
-
     })
 })
 
@@ -306,6 +339,9 @@ map.on('click', function (evt) {
                     url: url,
                     method: 'post',
                     success: function (data) {
+                        if (data.features.length === 0) {
+                            return;
+                        }
                         var featureObj = geoFormat.readFeature(data.features[0]);
                         vectorSource.addFeature(featureObj);
                         selectedFeature = featureObj;
@@ -344,12 +380,13 @@ function addInter(type) {
         source: vectorSource
     });
     map.addInteraction(currentInter);
+    measureFeatures();
 }
 
 combo.addEventListener("click", changeDrawType);
 
 function changeDrawType() {
-    
+
     var selectedType = combo.value;
 
     map.removeInteraction(currentInter);
@@ -358,6 +395,56 @@ function changeDrawType() {
         addInter(selectedType);
     }
 }
+
+//Add measure feature
+var calcLength = function (line) {
+    var length = ol.sphere.getLength(line);
+    var output;
+    if (length > 100) {
+        output = (Math.round(length / 1000 * 100) / 100) +
+            ' ' + 'km';
+    } else {
+        output = (Math.round(length * 100) / 100) +
+            ' ' + 'm';
+    }
+    return output;
+};
+
+var calcArea = function (polygon) {
+    var area = ol.sphere.getArea(polygon);
+    var output;
+    if (area > 10000) {
+        output = (Math.round(area / 1000000 * 100) / 100) + ' km<sup>2</sup>';
+    } else {
+        output = (Math.round(area * 100) / 100) + ' m<sup>2</sup>';
+    }
+    return output;
+};
+
+function measureFeatures() {
+    currentInter.on('drawstart', function (evt) {
+        evt.feature.getGeometry().on('change', function (evt) {
+            var geom = evt.target;
+            if (geom instanceof ol.geom.Polygon) {
+                var result = calcArea(geom);
+                $("#measureSpan").html(result);
+            }
+            else if (geom instanceof ol.geom.LineString) {
+                var result = calcLength(geom);
+                $("#measureSpan").html(result);
+            }
+        })
+    })
+}
+
+$("#measure").click(function () {
+    if ($(this).prop("checked") == true) {
+        $("#measureSpan").removeAttr("hidden");
+    }
+    else {
+        $("#measureSpan").attr("hidden", "true").html("");
+    }
+})
 
 //add Modify feature
 var modify = new ol.interaction.Modify({
@@ -369,14 +456,14 @@ $("#modify").click(function () {
     if (!modSituation) {
         map.removeInteraction(currentInter);
         modSituation = true;
-        map.addInteraction(modify); 
+        map.addInteraction(modify);
         map.removeOverlay(overlay);
     }
     else {
         map.removeInteraction(modify);
         modSituation = false;
         map.addOverlay(overlay);
-        
+
     }
     $("#modify").toggleClass("buttonEnabled");
 })
