@@ -108,6 +108,15 @@ const turkeyPlacesLayer = new ol.layer.Image({
     title: "Turkey Places"
 })
 
+//Syria Roads
+const syriaSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/nyc/wms?service=WMS&version=1.1.0&request=GetMap&layers=nyc%3ASyria_Roads&srs=EPSG%3A4326&format=image%2Fpng'
+})
+const syriaLayer = new ol.layer.Image({
+    source: syriaSource,
+    title: "Syria"
+})
+
 //Layer Groups
 const turkeyGroup = new ol.layer.Group({
     fold: 'open',
@@ -140,18 +149,9 @@ var overlay = new ol.Overlay({
     autoPan: true
 });
 
-//Syria Roads
-const syriaSource = new ol.source.ImageWMS({
-    url: 'http://localhost:8090/geoserver/wms?Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
-});
-const syriaLayer = new ol.layer.Image({
-    source: wmsLayerSource,
-    title: "Syria"
-});
-
 //Map
 const map = new ol.Map({
-    layers: [rasterGroup, syriaLayer],
+    layers: [rasterGroup, syriaLayer, featuresGroup],
     target: 'map',
     overlays: [overlay],
     view: new ol.View({
@@ -159,9 +159,6 @@ const map = new ol.Map({
         zoom: 6
     })
 });
-
-
-
 
 //Layer Switcher
 var layerSwitcher = new ol.control.LayerSwitcher({
