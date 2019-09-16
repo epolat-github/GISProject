@@ -72,6 +72,15 @@ const turkeyRoadLayer = new ol.layer.Image({
     title: "Turkey Roads"
 })
 
+//Turkey Roads Vector
+const turkeyRoadVectorSource = new ol.source.Vector({
+    format: geoFormat,
+    url: 'http://localhost:8090/geoserver/nyc/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=nyc%3ATurkey_Roads&outputFormat=application%2Fjson'
+})
+const turkeyRoadVectorLayer = new ol.layer.Vector({
+    source: turkeyRoadVectorSource
+})
+
 //Turkey Buildings
 const turkeyBuildingSource = new ol.source.ImageWMS({
     url: 'http://localhost:8090/geoserver/nyc/wms?service=WMS&version=1.1.0&request=GetMap&layers=nyc%3ATurkey_Buildings&srs=EPSG%3A4326&format=image%2Fpng'
@@ -131,16 +140,28 @@ var overlay = new ol.Overlay({
     autoPan: true
 });
 
+//Syria Roads
+const syriaSource = new ol.source.ImageWMS({
+    url: 'http://localhost:8090/geoserver/wms?Format=image/png&request=GetMap&layers=nyc:FEATURES&srs=EPSG:3857'
+});
+const syriaLayer = new ol.layer.Image({
+    source: wmsLayerSource,
+    title: "Syria"
+});
+
 //Map
 const map = new ol.Map({
-    layers: [rasterGroup, turkeyGroup, featuresGroup],
+    layers: [rasterGroup, syriaLayer],
     target: 'map',
     overlays: [overlay],
     view: new ol.View({
-        center: [3658658.33, 4855126.83],
-        zoom: 9
+        center: [4038485.89, 3963250.52],
+        zoom: 6
     })
 });
+
+
+
 
 //Layer Switcher
 var layerSwitcher = new ol.control.LayerSwitcher({
