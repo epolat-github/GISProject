@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <title>OpenLayers</title>
     <link rel="stylesheet" href="./ol.css" type="text/css">
+    <link rel="stylesheet" href="./layerSwitcherStyle.css" />
+    <link rel="stylesheet" href="./rangeslider.css" />
+
     <style>
         #map {
             margin: 0;
@@ -13,9 +16,15 @@
             background-color: #04041b;
         }
 
-        #propTable{
+        #propTable {
             background-color: azure;
             opacity: 0.9;
+        }
+
+        #measureSpan{
+            background-color: black;
+            border-color: black;
+            color: whitesmoke;
         }
 
         html {
@@ -32,6 +41,23 @@
             border: 3px solid #5e5656;
             text-align: left;
             padding: 8px;
+        }
+
+        .pop-outer {
+            background-color: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pop-inner {
+            background-color: #fff;
+            width: 500px;
+            height: 300px;
+            padding: 25px;
+            margin: 15% auto;
         }
 
         .buttonDisabled {
@@ -54,17 +80,22 @@
             border-color: #00ff21;
         }
     </style>
+
     <!-- openLayers.js, jQuery.js -->
     <script src="./ol.js"></script>
     <script src="./jquery-3.4.1.min.js"></script>
+    <!--<script src="./rangeslider.js"></script>-->
+    <!--Layer Switcher-->
+    <script src="./layerSwitcher.js"></script>
+
 </head>
 <body>
     <!-- Text -->
-    <h1 style="color:aqua;">MAP</h1>
-    <p1 style="color:aqua; font-size:20px;">Please select: </p1>
+    <!--<h1 style="color:aqua;">MAP</h1>-->
+    <!--<p1 style="color:aqua; font-size:20px;">Please select: </p1>-->
     <!-- Text -->
     <!-- Combo box -->
-    <select class="buttons" id="drawTypes">
+    <select class="buttons" id="drawTypes" disabled>
         <option value="Point">Point</option>
         <option value="LineString">Line</option>
         <option value="Polygon">Polygon</option>
@@ -73,24 +104,65 @@
     </select>
     <!-- Combo box -->
     <!-- Buttons -->
-    <button class="buttonDisabled" id="modify" onclick="Modify();">Modify</button>
+    <button class="buttonDisabled" id="modify">Modify</button>
     <!--<button class="buttonDisabled" id="snap" onclick="Snap();">Snap</button>-->
-    <button class="buttonDisabled" id="select">Select</button>
-    <button class="buttonDisabled" id="add">Add</button>
+    <!--<button class="buttonDisabled" id="select">Select</button>-->
+    <button class="buttonDisabled" id="draw">Draw</button>
+    <!--<button class="buttonDisabled" id="add">Add</button>-->
     <button class="buttonDisabled" id="update">Update</button>
     <!--<button class="buttonDisabled" id="load" onclick="loadMap();">Load</button>-->
     <!--<button class="buttonDisabled" id="save" onclick="saveMap();">Save</button>-->
-    <button class=" buttonDisabled" id="delete">Delete</button>
-    <button class="buttonDisabled" id="clear" onclick="clearMap();">Clear</button>
+    <!--<button class=" buttonDisabled" id="delete">Delete</button>-->
+    <button class="buttonDisabled" id="clear" onclick="clearMap();">Clear Map</button>
+    <button class="buttonDisabled" id="clearFeat">Clear Drawings</button>
+    <button class="buttonDisabled" id="deselect">Deselect</button>
+    <input type="checkbox" id="measure" name="measure" value="Measure" />
+    <!--<textarea id="measureText" readonly rows="1" hidden></textarea>-->
+    <span id="measureSpan" hidden></span>
+    <!--<input type="range" min="0" max="100" value="100" class="slider" id="opacitySlider">-->
     <!-- Buttons -->
     <!-- Div to hold map -->
     <div id="map"></div>
     <!-- Div to hold map -->
     <!--Div to hold overlay popups-->
     <div id="popup">
+        <button id="delBut" class="buttonEnabled">Delete</button>
+        <button id="infoBut" class="buttonEnabled">Additional Info</button>
         <table id="propTable"></table>
     </div>
     <!--Div to hold overlay popups-->
+    <!--Div to hold additional info popup-->
+    <div style="display: none;" class="pop-outer">
+        <div class="pop-inner">
+            <button class="close">X</button>
+            <button id="edit" style="float:right">Edit</button>
+            <button id="resetInput" hidden style="float:right">Reset</button>
+            <!--<h2>Additional Information</h2>-->
+            <table id="infoTable" style="width:100%">
+                <caption style="font-weight:bold">Additional Information</caption>
+                <tr>
+                    <th style="width:150px">ID</th>
+                    <td id="id"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Name</th>
+                    <td id="name"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Type</th>
+                    <td id="type"></td>
+                </tr>
+                <tr>
+                    <th style="width:150px">Comment</th>
+                    <td id="comment"></td>
+                </tr>
+            </table>
+            <button id="submit" hidden style="float:right">Submit</button>
+
+
+        </div>
+    </div>
+    <!--Div to hold additional info popup-->
     <!-- Script -->
     <script src="./GSindex.js"></script>
     <!-- Script -->

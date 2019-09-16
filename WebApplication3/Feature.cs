@@ -17,12 +17,12 @@ namespace WebApplication3
             this.id = id;
             this.type = type;
             this.geometry = geometry;
-            this.properties = properties;
+            //this.properties = properties;
         }
 
-        public int id { get; set;}
+        public int id { get; set; }
         public string type { get; set;}
         public Object geometry { get; set;}
-        public string properties { get; set;}
+        //public string properties { get; set;}
     }
 }

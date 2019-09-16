@@ -98,6 +98,8 @@
     <Content Include="index.html" />
     <Content Include="DBindex.js" />
     <Content Include="jquery-3.4.1.min.js" />
+    <Content Include="layerSwitcher.js" />
+    <Content Include="layerSwitcherStyle.css" />
     <Content Include="ol.css" />
     <Content Include="ol.js" />
     <Content Include="ol\array.js" />
@@ -452,6 +454,8 @@
     <Content Include="ol\webgl\Shader.js" />
     <Content Include="ol\webgl\Vertex.js" />
     <Content Include="ol\xml.js" />
+    <Content Include="rangeslider.css" />
+    <Content Include="rangeslider.js" />
     <Content Include="Web.config" />
     <Content Include="WebService1.asmx" />
   </ItemGroup>
