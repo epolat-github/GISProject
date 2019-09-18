@@ -84,17 +84,12 @@
     <!-- openLayers.js, jQuery.js -->
     <script src="./ol.js"></script>
     <script src="./jquery-3.4.1.min.js"></script>
-    <!--<script src="./rangeslider.js"></script>-->
     <!--Layer Switcher-->
     <script src="./layerSwitcher.js"></script>
 
 </head>
 <body>
-    <!-- Text -->
-    <!--<h1 style="color:aqua;">MAP</h1>-->
-    <!--<p1 style="color:aqua; font-size:20px;">Please select: </p1>-->
-    <!-- Text -->
-    <!-- Combo box -->
+   <!-- Combo box -->
     <select class="buttons" id="drawTypes" disabled>
         <option value="Point">Point</option>
         <option value="LineString">Line</option>
@@ -105,21 +100,13 @@
     <!-- Combo box -->
     <!-- Buttons -->
     <button class="buttonDisabled" id="modify">Modify</button>
-    <!--<button class="buttonDisabled" id="snap" onclick="Snap();">Snap</button>-->
-    <!--<button class="buttonDisabled" id="select">Select</button>-->
     <button class="buttonDisabled" id="draw">Draw</button>
-    <!--<button class="buttonDisabled" id="add">Add</button>-->
     <button class="buttonDisabled" id="update">Update</button>
-    <!--<button class="buttonDisabled" id="load" onclick="loadMap();">Load</button>-->
-    <!--<button class="buttonDisabled" id="save" onclick="saveMap();">Save</button>-->
-    <!--<button class=" buttonDisabled" id="delete">Delete</button>-->
     <button class="buttonDisabled" id="clear" onclick="clearMap();">Clear Map</button>
     <button class="buttonDisabled" id="clearFeat">Clear Drawings</button>
     <button class="buttonDisabled" id="deselect">Deselect</button>
     <input type="checkbox" id="measure" name="measure" value="Measure" />
-    <!--<textarea id="measureText" readonly rows="1" hidden></textarea>-->
     <span id="measureSpan" hidden></span>
-    <!--<input type="range" min="0" max="100" value="100" class="slider" id="opacitySlider">-->
     <!-- Buttons -->
     <!-- Div to hold map -->
     <div id="map"></div>
@@ -137,7 +124,6 @@
             <button class="close">X</button>
             <button id="edit" style="float:right">Edit</button>
             <button id="resetInput" hidden style="float:right">Reset</button>
-            <!--<h2>Additional Information</h2>-->
             <table id="infoTable" style="width:100%">
                 <caption style="font-weight:bold">Additional Information</caption>
                 <tr>
@@ -166,6 +152,5 @@
     <!-- Script -->
     <script src="./GSindex.js"></script>
     <!-- Script -->
-
 </body>
 </html>

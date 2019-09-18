@@ -114,7 +114,6 @@ const featuresGroup = new ol.layer.Group({
 
 const rasterGroup = new ol.layer.Group({
     fold: 'open',
-    //type: 'base',
     title: "Rasters",
     layers: [bingLayer, xyzLayer, stamenLayer, rasterLayer]
 });
@@ -133,7 +132,7 @@ var overlay = new ol.Overlay({
 
 //Map
 const map = new ol.Map({
-    layers: [rasterGroup, turkeyGroup, featuresGroup],
+    layers: [rasterGroup, featuresGroup],
     target: 'map',
     overlays: [overlay],
     view: new ol.View({
@@ -149,12 +148,16 @@ var layerSwitcher = new ol.control.LayerSwitcher({
 });
 map.addControl(layerSwitcher);
 
+//Snap feature
+var snap = new ol.interaction.Snap({
+    source: vectorSource
+});
+
 //Add popup
 function addPopup(data) {
     var id = data.getId();
     if (id === undefined) {
         $('#propTable').html("Not yet uploaded to DB");
-        //var coordinateArray = data.getGeometry().extent_;
         var type = data.getGeometry().getType();
     }
     else {
@@ -184,9 +187,6 @@ function addPopup(data) {
         default:
             console.log("Unknown style!");
     }
-
-    //overlay.setPosition(coordinateArray[0][0], coordinateArray[0][1]);
-    //alert("Successfully selected!");
     console.log(data);
 }
 
@@ -270,7 +270,6 @@ $(function () {
             })
 
             $("#resetInput").hide();
-            //$("#submit").hide();
             $("#edit").show();
 
         });
@@ -310,20 +309,10 @@ $(function () {
 
 //Getting info of selected feature from GeoServer
 map.on('click', function (evt) {
-    //var url = wmsLayerSource.getGetFeatureInfoUrl(
-    //    evt.coordinate, map.getView().getResolution(),
-    //    map.getView().getProjection());
-    //if (url !== undefined) {
-    //    console.log("clicked");
-    //}
     if (drawSitu === true || modSituation === true) {
         return;
     }
     overlay.setPosition(undefined);
-
-    //vectorSource.forEachFeature(function (e) { //clears the vector source
-    //    vectorSource.removeFeature(e)
-    //});
 
     map.forEachLayerAtPixel(evt.pixel, function (layer) {
         if (layer.getType() === "IMAGE") {      //if clicked to wmsLayer(to a feature)
@@ -468,28 +457,6 @@ $("#modify").click(function () {
     $("#modify").toggleClass("buttonEnabled");
 })
 
-//SNAP FEATURE 
-//add Snap feature
-//snapButton.disabled = true;
-//var snap = new ol.interaction.Snap({
-//    source: vectorSource
-//});
-//var snapSituation = false; //false, not snapping; true, snapping
-//function Snap() {
-//    if (snapSituation) {
-//        map.removeInteraction(snap); // disables snap
-//        snapSituation = false;
-//        snapButton.style.backgroundColor = "#ea9595";
-//        snapButton.style.borderColor = "#c71d1d";
-//    }
-//    else {
-//        map.addInteraction(snap);
-//        snapSituation = true;
-//        snapButton.style.backgroundColor = "#5ebe82";
-//        snapButton.style.borderColor = "#00ff21";
-//    }
-//}
-
 //Synchronize map
 $(function () {
     $("#update").click(function () {
@@ -534,7 +501,7 @@ function updateFeature(geoJson) {
             console.log("Successfully updated!");
         },
         error: function (req, textStatus, errorThrown) {
-            //alert('Update Feature Error: ' + textStatus + ' ' + errorThrown);
+            console.log('Update Feature Error: ' + textStatus + ' ' + errorThrown);
         }
     });
 };
@@ -563,7 +530,6 @@ $(function () {
         if (select !== null) {
             var allFeatures = select.getFeatures();
             var feature = allFeatures.item(0);
-            //feature.setProperties({'id': (lastId + 1)});
             feature.setId((++lastId));
             geoJsonObject = geoFormat.writeFeature(allFeatures.item(0));
         }
@@ -609,48 +575,6 @@ $("#delBut").click(function () {
         });
     }
 });
-
-
-//Deletes specific feature
-//$(function () {
-//    $("#delete").click(function () {
-//        if (select.getFeatures().values_.length != 0) {
-//            var allFeatures = select.getFeatures();
-//            var featToDel = allFeatures.item(0);
-//            var deleteId = featToDel.getId();   //string id
-//            if (deleteId == undefined) {        //deletion before sync (no id appointed yet)
-//                vectorSource.removeFeature(featToDel);
-//                select.getFeatures().clear();
-//                alert("Deleted");
-//                return;
-//            }
-//            deleteId = parseInt(deleteId.substring(9)); //int id
-//        }
-//        else {
-//            alert("No feature selected!");
-//            return;
-//        }
-
-//        $.ajax({
-//            url: "WebService1.asmx/deleteFeature",
-//            data: { id: deleteId },
-//            method: "post",
-//            success: function () { //data.d
-//                vectorSource.removeFeature(featToDel);
-//                $("#select").trigger('click');
-//                wmsLayerSource.refresh();
-//                select.getFeatures().clear();
-//                overlay.setPosition(undefined);
-//                alert("Successfully deleted!");
-//            },
-//            error: function (req, textStatus, errorThrown) {
-//                $("#select").trigger('click');
-//                select.getFeatures().clear();
-//                alert('Deletion Error: ' + textStatus + ' ' + errorThrown);
-//            }
-//        });
-//    });
-//});
 
 //Clears map
 function clearMap() {
