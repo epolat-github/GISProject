@@ -97,12 +97,12 @@
     <Content Include="GSindex.js" />
     <Content Include="index.html" />
     <Content Include="JSLibs\jquery-3.4.1.min.js" />
-    <Content Include="extensions\layerSwitcher.js" />
-    <Content Include="extensions\layerSwitcherStyle.css" />
+    <Content Include="OLextensions\layerSwitcher.js" />
+    <Content Include="OLextensions\layerSwitcherStyle.css" />
     <Content Include="openLayers\ol.css" />
     <Content Include="openLayers\ol.js" />
-    <Content Include="extensions\rangeslider.css" />
-    <Content Include="extensions\rangeslider.js" />
+    <Content Include="OLextensions\rangeslider.css" />
+    <Content Include="OLextensions\rangeslider.js" />
     <Content Include="Web.config" />
     <Content Include="WebService1.asmx" />
   </ItemGroup>
