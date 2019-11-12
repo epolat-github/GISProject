@@ -10,12 +10,11 @@ using Npgsql;
 namespace WebApplication3
 {
     /// <summary>
-    /// Summary description for WebService1
+    /// web service for project
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
     [System.ComponentModel.ToolboxItem(false)]
-    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
     [System.Web.Script.Services.ScriptService]
     public class WebService1 : System.Web.Services.WebService
     {
@@ -90,10 +89,6 @@ namespace WebApplication3
             NpgsqlConnection conn = connectDB();
             conn.Open();
 
-            //string updateQuery = $"UPDATE public.additional_information SET \"name\"='{name}', " +
-            //    $"\"type\"='{type}', \"comment\"='{comment}' " +
-            //    $"WHERE gid={id}";
-
             string insertQuery = "INSERT INTO public.additional_information" +
                 "(gid, \"name\", \"type\", \"comment\")" +
                 $"VALUES({idInt}, '{name}', '{type}', '{comment}') " +
@@ -111,7 +106,6 @@ namespace WebApplication3
         [WebMethod]
         public void deleteAdditionalInfo(int id)
         {
-
             NpgsqlConnection conn = connectDB();
             conn.Open();
             string deleteQuery = "DELETE FROM public.additional_information WHERE gid=" + id;
@@ -169,7 +163,6 @@ namespace WebApplication3
                 string prop = dr[3].ToString();
 
                 feature = new Feature(id, type, geom, prop);
-                //featuresList.Add(JsonConvert.SerializeObject(feature));
                 featuresList.Add(feature);
             }
             conn.Close();
