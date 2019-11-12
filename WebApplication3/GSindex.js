@@ -28,7 +28,7 @@ const xyzLayer = new ol.layer.Tile({
 
 //Bing Raster Layer
 const bingSource = new ol.source.BingMaps({
-    key: 'Aggs4w9zy4myZUovZQJAK2O7z5wQOZDi2rQaPgHbUHTBVdgv69zrnpMjxNYUMTOU',
+    key: 'Bing Key', //your Bing Maps key
     imagerySet: 'RoadOnDemand'
 });
 const bingLayer = new ol.layer.Tile({
